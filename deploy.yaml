@@ -1,0 +1,29 @@
+---
+dockerRepository:
+  developmentRepositoryName: mycujoo-development
+  productionRepositoryName: refined-cortex-806
+  branchRepositoryName:
+    master: mycujoo-development
+  registryRoot: eu.gcr.io
+application:
+  packageJSON: true
+
+tests:
+  - name: Start container, test ping, yarn test
+    dockerArgs: |
+      -d
+    type: in-test-container
+    commands:
+    - sleep 3 # Give the node server some time to start
+    - curl -s --max-time 3 localhost:4100/ping
+    # Perform basic performance testing
+    - docker run --rm  thecodeassassin/alpine-load-tester -n10 http://localhost/slow/200 | jq -e -r '.avg < 0.25'
+    - docker run --rm  thecodeassassin/alpine-load-tester -n10 http://localhost/slow/300 | jq -e -r '.avg < 0.35'
+    - docker run --rm  thecodeassassin/alpine-load-tester -n10 http://localhost/slow/500 | jq -e -r '.avg < 0.55'
+    - docker run --rm  thecodeassassin/alpine-load-tester -n10 http://localhost/new | jq -e -r '.avg < 0.55'
+    - bash -c "NODE_ENV=test yarn test -- --ci --coverage --runInBand"
+
+  - name: Run migrations
+    type: host-only
+    commands:
+    - sh kubernetes/run-migrations.sh
