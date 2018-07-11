@@ -12,7 +12,7 @@ router.get('/', ({ response }) => {
 })
 
 router.get('/new', async ({ response }) => {
-    await wait(1000)
+    await wait(50)
     response.body = 'Route test'
     response.status = 200
 })
