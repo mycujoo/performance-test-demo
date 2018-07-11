@@ -1,4 +1,6 @@
 {
+  "name": "performance-test-demo",
+  "version": "1.0",
   "dependencies": {
     "koa": "^2.5.1",
     "koa-better-router": "^2.1.1",

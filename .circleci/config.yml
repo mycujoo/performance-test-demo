@@ -3,10 +3,6 @@ defaults: &defaults
   working_directory: /tmp/build
   environment:
     IMAGE_NAME: performance-test-demo
-    GOOGLE_PROJECT_NAME_DEVELOPMENT: mycujoo-development
-    GOOGLE_CLUSTER_NAME_DEVELOPMENT: mycujoo-kubernetes-development
-    GOOGLE_COMPUTE_ZONE_DEVELOPMENT: europe-west3-a
-    DEBIAN_FRONTEND: noninteractive
     APPLICATION_PORT: 3000
     VERSION: 1.0
 
@@ -22,21 +18,17 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Install kube-deploy
+          name: "Build container and run the container"
           command: |
-            wget https://s3.eu-central-1.amazonaws.com/binary-distribution/kube-deploy-linux-amd64 -O /usr/local/bin/kube-deploy
-            chmod +x /usr/local/bin/kube-deploy
+            docker build -t mycujoo/performance-test-demo .
+            docker run -d mycujoo/performance-test-demo
       - run:
-          name: Configure environment and docker login
+          name: Run performance tests
           command: |
-            . kubernetes/configure.sh
-            docker login -u _json_key -p "$(cat /root/gcp-key.json)" https://eu.gcr.io
-      ### kube-deploy steps start ###
-      - run:
-          name: Build image and test
-          command: |
-            docker-compose --version
-            kube-deploy build --force-push-image
+            docker run --rm  thecodeassassin/alpine-load-tester -n 10 --json-output http://localhost:3000/slow/200 | jq -e -r '.avg < 0.25'
+            docker run --rm  thecodeassassin/alpine-load-tester -n 10 --json-output http://localhost:3000/slow/300 | jq -e -r '.avg < 0.35'
+            docker run --rm  thecodeassassin/alpine-load-tester -n 10 --json-output http://localhost:3000/slow/500 | jq -e -r '.avg < 0.55'
+            docker run --rm  thecodeassassin/alpine-load-tester -n 10 --json-output http://localhost:3000/new | jq -e -r '.avg < 0.2'
       - run:
           name: Deploy to kubernetes
           command: |
