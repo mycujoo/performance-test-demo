@@ -22,6 +22,7 @@ jobs:
           command: |
             docker build -t mycujoo/performance-test-demo .
             docker run -d -p 3000:3000 mycujoo/performance-test-demo
+            docker run --rm  thecodeassassin/alpine-load-tester -n 10 --json-output http://localhost:3000/slow/200
       - run:
           name: Run performance tests
           command: |
