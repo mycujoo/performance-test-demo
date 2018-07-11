@@ -21,7 +21,7 @@ jobs:
           name: "Build container and run the container"
           command: |
             docker build -t mycujoo/performance-test-demo .
-            docker run -d mycujoo/performance-test-demo
+            docker run -d -p 3000:3000 mycujoo/performance-test-demo
       - run:
           name: Run performance tests
           command: |
